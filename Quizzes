@@ -87,7 +87,7 @@ modelFit2 <- train(diagnosis ~ .,method="glm",preProcess="pca",data=newtrainings
 
 train(diagnosis ~ .,method="glm",preProcess="pca",data=newtrainingset)
 
-#~~~~~~~~~~~~~~~~~~~ Quiz 1 - Question 1 ~~~~~~~~~~~~~~~~~~~
+#~~~~~~~~~~~~~~~~~~~ Quiz 3 - Question 1 ~~~~~~~~~~~~~~~~~~~
 
 library(AppliedPredictiveModeling)
 data(segmentationOriginal)
@@ -132,7 +132,7 @@ predict(modFit, pedictData[4,])  # returns PS
 # For k-Fold validation:  see Cross Validation vide lecture
 # Larger K = less bias, more variance
 # Smaller K = more bias, less variance
-# Leave-One-Out cross validation is a special case of k-Fold where k = N
+# Leave-One-Out cross validation - special case of k-Fold where k = N
 
 #~~~~~~~~~~~~~~~~~~~ Quiz 3 - Question 3 ~~~~~~~~~~~~~~~~~~~
 
@@ -146,7 +146,9 @@ fancyRpartPlot(modFit$finalModel)
 newdata = as.data.frame(t(colMeans(olive)))
 predict(modFit, newdata)
 
-# The prediction is returns a number instead of a catagory as the result
+# The prediction returns a number instead of a catagory as the result
+# Looking at: https://stat.ethz.ch/R-manual/R-devel/library/rpart/html/predict.rpart.html
+#  - should we have used predict(modFit, newdata, type = "class") ? 
 
 #~~~~~~~~~~~~~~~~~~~ Quiz 3 - Question 4 ~~~~~~~~~~~~~~~~~~~
 
