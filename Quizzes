@@ -127,9 +127,11 @@ predict(modFit, pedictData[2,])  # returns WS
 predict(modFit, pedictData[3,])  # returns PS
 predict(modFit, pedictData[4,])  # returns PS
 
+# this does not agree with the correct answer :(
+
 #~~~~~~~~~~~~~~~~~~~ Quiz 3 - Question 2 ~~~~~~~~~~~~~~~~~~~
 
-# For k-Fold validation:  see Cross Validation vide lecture
+# For k-Fold validation:  see Cross Validation video lecture
 # Larger K = less bias, more variance
 # Smaller K = more bias, less variance
 # Leave-One-Out cross validation - special case of k-Fold where k = N
@@ -179,6 +181,14 @@ vowel.train$y = as.factor(vowel.train$y)
 vowel.test$y = as.factor(vowel.test$y)
 set.seed(33833)
 modFit = train(y ~ ., method = 'rf', data = vowel.train, prox = TRUE)
-varImp(model$finalModel)
+varImp(modFit$finalModel)
+# this did not produce the same answer as the quiz answer.  
+# In the discussion forum it was suggested to add:  tuneGrid=expand.grid(mtry=1)
+
+modFit = train(y ~ ., method = 'rf', data = vowel.train,tuneGrid=expand.grid(mtry=1), prox = TRUE)
+varImp(modFit$finalModel)
+# this produces the correct answre :)
+
+
 
 
