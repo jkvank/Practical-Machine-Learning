@@ -1,0 +1,48 @@
+library(caret)
+library(randomForest)  # performs faster  than the training in caret
+
+set.seed(123)
+
+traindata = read.csv("D:/Machine Learning Notes/Practical Machine Learning/pml-training.csv")
+testdata = read.csv("D:/Machine Learning Notes/Practical Machine Learning/pml-testing.csv")
+
+# lots of columns are incomplete (na).
+# look at ommitting these columns:
+
+x = traindata
+x = x[sapply(x, function(x) !any(is.na(x)))]       # x is training data with incomplete columns removed 
+y = x[sapply(x, function(x) any(is.numeric(x)))]   # y is x with non numeric columns removed
+y = subset(y, select=-c(X,raw_timestamp_part_1,raw_timestamp_part_2,num_window))  # drop a couple more useless columns
+
+
+z<-cbind(subset(x,select=c("classe")),y)           # put the classe column back in (it was removed above)
+newtestdata = testdata[,intersect(colnames(testdata), colnames(z))]  # extract same columns from modified training set
+
+# create a sample set:
+inTrain = createDataPartition(z$classe, p = 3/4)[[1]]
+trainingset = z[+inTrain,]
+validationset = z[-inTrain,]
+
+dim(z);dim(trainingset);dim(validationset)
+
+# fit a random forest
+# modFit = train(classe ~ ., method = 'rf', data = testing,tuneGrid=expand.grid(mtry=1), prox = TRUE)
+modFit <- randomForest(classe~.,data=trainingset)
+print(modFit)
+
+predict_validation = predict(modFit,validationset)
+confusionMatrix(predict_validation,validationset$classe)
+
+predict_test = predict(modFit,newtestdata)
+predict_test
+
+# submit results
+answers<-predict_test 
+pml_write_files = function(x){
+  n = length(x)
+  for(i in 1:n){
+    filename = paste0("problem_id_",i,".txt")
+    write.table(x[i],file=filename,quote=FALSE,row.names=FALSE,col.names=FALSE)
+  }
+}
+pml_write_files(answers)
