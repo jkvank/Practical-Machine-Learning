@@ -1,0 +1,312 @@
+<p>
+	<strong>Practical Machine Learning – Course Project</strong>
+</p>
+<p align="right">
+	<strong>
+		Jim van Kruyssen
+		<br/>
+		25<sup>th</sup> October 2014
+	</strong>
+</p>
+<p>
+	<strong>Background</strong>
+</p>
+<p>
+	Using devices such as <em>Jawbone Up</em>, <em>Nike FuelBand</em>, and <em>Fitbit</em> it is now possible to collect a large amount of data about personal
+	activity relatively inexpensively. These type of devices are part of the quantified self movement – a group of enthusiasts who take measurements about
+	themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is
+	quantify how <em>much</em> of a particular activity they do, but they rarely quantify <em>how well they do it</em>. In this project, your goal will be to
+	use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants. They were asked to perform barbell lifts correctly and incorrectly
+	in 5 different ways
+</p>
+<p>
+	<strong>Solution Approach</strong>
+</p>
+<p>
+	We will use Random Forests as a classification prediction model.
+</p>
+<p>
+	Note that using the train function in the caret package as per below was unsuccessful on my PC:
+</p>
+<p>
+	modFit = train(classe ~ ., method = 'rf', data = trainingdata, tuneGrid=expand.grid(mtry=1), prox = TRUE)
+</p>
+<p>
+	The training process repeatedly failed due to memory issues. As such, I will be using the Random Forest model from the R randomForest library.
+</p>
+<p>
+	<strong>Solution Details</strong>
+</p>
+<ol>
+		<p>
+		<b>1.	Load the Training and Test data.</b>
+		</p>
+</ol>
+<p>
+	As per the assignment instructions, the training and test data are both downloaded from the URLs:
+</p>
+<p>
+	<a href="https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv">https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv</a>
+	<br/>
+	and:
+	<br/>
+	<a href="https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv">https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv</a>
+</p>
+<p>
+	The data is loaded into R for processing:
+</p>
+<p>
+<font color="red">	&gt; library(caret)
+</p>
+<p>
+	&gt; library(randomForest) # performs faster than the training in caret
+</p>
+<p>
+	&gt; set.seed(123)
+</p>
+<p>
+	&gt; traindata = read.csv("D:/Machine Learning Notes/Practical Machine Learning/pml-training.csv")
+</p>
+<p>
+	&gt; testdata = read.csv("D:/Machine Learning Notes/Practical Machine Learning/pml-testing.csv")
+</p>
+<p>
+</font>	Viewing the data, it’s noted that several columns are incomplete, indicated by NA.
+</p>
+<p>
+	These columns will be omitted:
+</p>
+<p>
+<font color="red">	&gt; x = traindata
+</p>
+<p>
+	&gt; x = x[sapply(x, function(x) !any(is.na(x)))] # x is training data with incomplete columns removed
+</p>
+<p>
+	&gt; y = x[sapply(x, function(x) any(is.numeric(x)))] # y is x with non numeric columns removed
+</p>
+<p>
+	&gt; y = subset(y, select=-c(X,raw_timestamp_part_1,raw_timestamp_part_2,num_window)) # drop a couple more useless columns
+</p>
+<p>
+	&gt; z&lt;-cbind(subset(x,select=c("classe")),y) # put the classe column back in (it was removed above)
+</p>
+<p>
+</font>	Now that we have removed incomplete and spurious features, we need to make the test data comprise of the same features as the smaller training set. This is
+	done by using the “intersect” command:
+</p>
+<p>
+<font color="red">	&gt; newtestdata = testdata[,intersect(colnames(testdata), colnames(z))] # extract same columns from modified training set
+</p></font>
+<ol>
+		<p>
+		<b>2.	Partition the training data.</b>
+		</p>
+</ol>
+<p>
+	Next we will partition the reduced training data set into a ¾ training and ¼ validation set using “createDataPartition”:
+</p>
+<p>
+<font color="red">	&gt; inTrain = createDataPartition(z$classe, p = 3/4)[[1]]
+</p>
+<p>
+	&gt; trainingset = z[+inTrain,]
+</p>
+<p>
+	&gt; validationset = z[-inTrain,]</font>
+</p>
+<p>
+	We can confirm the partitioning using “dim”:
+</p>
+<p>
+<font color="red">	&gt; dim(z);dim(trainingset);dim(validationset)</font>
+</p>
+<p>
+<font color="blue";face="Courier";size=1>	[1] 19622 53
+</p>
+<p>
+	[1] 14718 53
+</p>
+<p>
+	[1] 4904 53 </font>
+</p>
+<ol>
+		<p>
+		<b>3.	Fit a Random Forest model.</b>
+		</p>
+</ol>
+<p>
+	We now fit a Random Forest to our training set and will test against the validation set of data to view model performance:
+</p>
+<p>
+<font color="red">	&gt; modFit &lt;- randomForest(classe~.,data=trainingset)
+</p>
+<p>
+	&gt; print(modFit)</font>
+</p>
+<p>
+<font color="blue">	Call:
+</p>
+<p>
+	randomForest(formula = classe ~ ., data = trainingset)
+</p>
+<p>
+	Type of random forest: classification
+</p>
+<p>
+	Number of trees: 500
+</p>
+<p>
+	No. of variables tried at each split: 7
+</p>
+<p>
+	OOB estimate of error rate: 0.52%
+</p>
+<p>
+	Confusion matrix:
+</p>
+<p>
+	A B C D E class.error
+</p>
+<p>
+	A 4183 1 0 0 1 0.0004778973
+</p>
+<p>
+	B 10 2833 5 0 0 0.0052668539
+</p>
+<p>
+	C 0 18 2543 6 0 0.0093494351
+</p>
+<p>
+	D 0 0 26 2386 0 0.0107794362
+</p>
+<p>
+	E 0 0 1 9 2696 0.0036954915</font>
+</p>
+<ol>
+		<p>
+		<b>4.	Validate the model’s performance.</b>
+		</p>
+</ol>
+<p>
+	Validating the fitted Random Forest against the validation data:
+</p>
+<p>
+<font color="red">	&gt; predict_validation = predict(modFit,validationset)</font>
+</p>
+<p>
+	We generate a confusion matrix to observe how the fitted Random Forest performed and observe that we have a 99.51% accuracy:
+</p>
+<p>
+<font color="red">	&gt; confusionMatrix(predict_validation,validationset$classe)</font>
+</p>
+<p>
+<font color="blue">	Confusion Matrix and Statistics
+</p>
+<p>
+	Reference
+</p>
+<p>
+	Prediction A B C D E
+</p>
+<p>
+	A 1394 1 0 0 0
+</p>
+<p>
+	B 1 946 8 0 0
+</p>
+<p>
+	C 0 2 847 9 0
+</p>
+<p>
+	D 0 0 0 793 1
+</p>
+<p>
+	E 0 0 0 2 900
+</p>
+<p>
+	Overall Statistics
+</p>
+<p>
+	Accuracy : 0.9951
+</p>
+<p>
+	95% CI : (0.9927, 0.9969)
+</p>
+<p>
+	No Information Rate : 0.2845
+</p>
+<p>
+	P-Value [Acc &gt; NIR] : &lt; 2.2e-16</font>
+</p>
+<ol>
+		<p>
+		<b>5.	Apply fitted model to the test data.</b>
+		</p>
+</ol>
+<p>
+	Finally we will apply the fitted Random Forest against the test data and predict the results:
+</p>
+<p>
+<font color="red">	&gt; predict_test = predict(modFit,newtestdata)
+</p>
+<p>
+	&gt; predict_test</font>
+</p>
+<p>
+<font color="blue">	1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20
+</p>
+<p>
+	B A B A A E D B A A B C B A E E A B B B
+</p>
+<p>
+	Levels: A B C D E</font>
+</p>
+<ol>
+		<p>
+		<b>6.	Predicted results.</b>
+		</p>
+</ol>
+<p>
+	The results that our Random Forest model yields are:
+</p>
+<p>
+<font color="blue">	1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20
+</p>
+<p>
+	B A B A A E D B A A B C B A E E A B B B
+</p>
+<p>
+	Levels: A B C D E</font>
+</p>
+<ol>
+		<p>
+		<b>7.	Submit results.</b>
+		</p>
+</ol>
+<p>
+	As per the submission guidelines:
+</p>
+<p>
+<font color="red">	&gt; answers&lt;-predict_test
+</p>
+<p>
+	&gt;pml_write_files = function(x){
+	<br/>
+	n = length(x)
+	<br/>
+	for(i in 1:n){
+	<br/>
+	filename = paste0("problem_id_",i,".txt")
+	<br/>
+	write.table(x[i],file=filename,quote=FALSE,row.names=FALSE,col.names=FALSE)
+	<br/>
+	}
+	<br/>
+	}
+	<br/>
+	&gt; pml_write_files(answers) </font>
+</p>
+<p>
+	A separate text file is produced for each of the 20 predictions : “problem_id_n.txt”
+</p>
